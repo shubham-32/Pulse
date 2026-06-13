@@ -42,7 +42,7 @@
   - Add glow/border flash animation when an appliance becomes active
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [-] 8. Verify build and run dev server
+- [x] 8. Verify build and run dev server
   - Run install + build, fix any errors, confirm dev server renders the dashboard
   - Confirm triggers spike the wave, stream logs, and flash cards
   - _Requirements: 1.1, 4.5, 7.2_
