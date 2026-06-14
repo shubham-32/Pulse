@@ -19,14 +19,7 @@ import { motion } from 'framer-motion';
 import { usePulse } from '../hooks/PulseProvider.jsx';
 import AmbientBackground from '../components/AmbientBackground.jsx';
 import GlassPanel, { PanelHeading } from '../components/GlassPanel.jsx';
-
-// Initials from a full name, e.g. "Rajesh Sharma" -> "RS".
-function initialsOf(name = '') {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] || '';
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return (first + last).toUpperCase();
-}
+import Avatar from '../components/Avatar.jsx';
 
 export default function LoginPage() {
   const { homeId, homeLabel, members, signIn } = usePulse();
@@ -127,13 +120,7 @@ export default function LoginPage() {
                             : 'border-white/10 bg-white/5 hover:bg-white/10',
                         ].join(' ')}
                       >
-                        <span
-                          aria-hidden="true"
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-obsidian"
-                          style={{ backgroundColor: m.avatarColor }}
-                        >
-                          {initialsOf(m.name)}
-                        </span>
+                        <Avatar member={m} size={36} ring={false} />
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-semibold text-white">
                             {m.name.split(' ')[0]}

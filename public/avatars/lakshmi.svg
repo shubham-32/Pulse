@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Lakshmi Sharma">
+  <defs>
+    <radialGradient id="lakshmiBg" cx="50%" cy="36%" r="78%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.34"/>
+      <stop offset="60%" stop-color="#241a0e" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0a0c12"/>
+    </radialGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#lakshmiBg)"/>
+  <!-- shawl / shoulders -->
+  <path d="M32 200 C32 156 66 142 100 142 C134 142 168 156 168 200 Z" fill="#9a5a2a"/>
+  <path d="M58 150 C70 176 130 176 142 150" stroke="#c98a4a" stroke-width="5" fill="none" opacity="0.65"/>
+  <!-- neck -->
+  <rect x="88" y="120" width="24" height="32" rx="11" fill="#bd855a"/>
+  <!-- grey hair behind (bun) -->
+  <path d="M56 96 C52 56 148 56 144 96 C148 72 130 52 100 52 C70 52 52 72 56 96 Z" fill="#d3d7de"/>
+  <circle cx="100" cy="50" r="12" fill="#c4c9d2"/>
+  <!-- head -->
+  <ellipse cx="100" cy="92" rx="39" ry="45" fill="#cfa07a"/>
+  <!-- ears + earrings -->
+  <circle cx="61" cy="95" r="6.5" fill="#cfa07a"/>
+  <circle cx="139" cy="95" r="6.5" fill="#cfa07a"/>
+  <circle cx="61" cy="106" r="2.8" fill="#f5c542"/>
+  <circle cx="139" cy="106" r="2.8" fill="#f5c542"/>
+  <!-- grey hairline -->
+  <path d="M61 84 C62 58 138 58 139 84 C134 68 120 58 100 58 C80 58 66 68 61 84 Z" fill="#d3d7de"/>
+  <path d="M100 58 L100 78" stroke="#b6bcc6" stroke-width="2" opacity="0.7"/>
+  <!-- bindi -->
+  <circle cx="100" cy="74" r="3.2" fill="#c0392b"/>
+  <!-- glasses -->
+  <circle cx="86" cy="95" r="11" fill="none" stroke="#3a3d45" stroke-width="2.4"/>
+  <circle cx="114" cy="95" r="11" fill="none" stroke="#3a3d45" stroke-width="2.4"/>
+  <path d="M97 95 h6" stroke="#3a3d45" stroke-width="2.4"/>
+  <!-- eyes -->
+  <circle cx="86" cy="95" r="3.4" fill="#1b1d22"/>
+  <circle cx="114" cy="95" r="3.4" fill="#1b1d22"/>
+  <!-- nose -->
+  <path d="M100 100 l-2.5 10 q2.5 3 5 0" stroke="#a86c42" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <!-- gentle smile -->
+  <path d="M88 120 q12 8 24 0" stroke="#8a5436" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <!-- smile lines -->
+  <path d="M76 112 q-4 4 -3 9 M124 112 q4 4 3 9" stroke="#b3865f" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.7"/>
+</svg>

@@ -25,10 +25,10 @@ export const HOME_LABEL = 'Sharma Residence';
  * presence is 'home' | 'away'; avatarColor is a hex from the accent palette.
  */
 export const INITIAL_MEMBERS = [
-  { id: 'rajesh',  name: 'Rajesh Sharma',  relationship: 'Father',      dob: '1978-04-12', avatarColor: '#22d3ee', presence: 'home' },
-  { id: 'priya',   name: 'Priya Sharma',   relationship: 'Mother',      dob: '1982-09-23', avatarColor: '#ec4899', presence: 'home' },
-  { id: 'aarav',   name: 'Aarav Sharma',   relationship: 'Son',         dob: '2010-01-15', avatarColor: '#a855f7', presence: 'away' },
-  { id: 'lakshmi', name: 'Lakshmi Sharma', relationship: 'Grandmother', dob: '1951-07-08', avatarColor: '#f59e0b', presence: 'home' },
+  { id: 'rajesh',  name: 'Rajesh Sharma',  relationship: 'Father',      dob: '1978-04-12', avatarColor: '#22d3ee', presence: 'home', avatar: '/avatars/rajesh.svg' },
+  { id: 'priya',   name: 'Priya Sharma',   relationship: 'Mother',      dob: '1982-09-23', avatarColor: '#ec4899', presence: 'home', avatar: '/avatars/priya.svg' },
+  { id: 'aarav',   name: 'Aarav Sharma',   relationship: 'Son',         dob: '2010-01-15', avatarColor: '#a855f7', presence: 'away', avatar: '/avatars/aarav.svg' },
+  { id: 'lakshmi', name: 'Lakshmi Sharma', relationship: 'Grandmother', dob: '1951-07-08', avatarColor: '#f59e0b', presence: 'home', avatar: '/avatars/lakshmi.svg' },
 ];
 
 /** rooms — physical zones appliances are grouped into (Task 13). */

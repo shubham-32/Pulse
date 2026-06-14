@@ -6,14 +6,7 @@
 // member is marked with a subtle "You" badge via the `isCurrent` flag.
 
 import { motion } from 'framer-motion';
-
-/** deriveInitials — first letters of the first two name words, uppercased. */
-function deriveInitials(name = '') {
-  const parts = String(name).trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
+import Avatar from './Avatar.jsx';
 
 /** computeAge — whole years between the ISO `dob` and now (clamped to >= 0). */
 function computeAge(dob) {
@@ -29,9 +22,8 @@ function computeAge(dob) {
 }
 
 export default function MemberCard({ member, isCurrent = false }) {
-  const { name, relationship, dob, avatarColor, presence } = member;
+  const { name, relationship, dob, presence } = member;
 
-  const initials = deriveInitials(name);
   const age = computeAge(dob);
   const isHome = presence === 'home';
 
@@ -51,19 +43,9 @@ export default function MemberCard({ member, isCurrent = false }) {
         </span>
       )}
 
-      {/* Top row: avatar circle (color + initials, subtle ring/glow). */}
+      {/* Top row: avatar (image with initials fallback) + glow ring. */}
       <div className="flex items-center gap-4">
-        <span
-          aria-hidden="true"
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full font-sans text-lg font-bold text-white ring-2 ring-white/10"
-          style={{
-            backgroundColor: `${avatarColor}26`,
-            color: avatarColor,
-            boxShadow: `0 0 16px ${avatarColor}55, inset 0 0 12px ${avatarColor}22`,
-          }}
-        >
-          {initials}
-        </span>
+        <Avatar member={member} size={56} />
 
         <div className="flex min-w-0 flex-col leading-tight">
           <span className="truncate font-sans text-base font-bold text-white">

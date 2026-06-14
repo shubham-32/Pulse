@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Rajesh Sharma">
+  <defs>
+    <radialGradient id="rajeshBg" cx="50%" cy="36%" r="78%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.38"/>
+      <stop offset="60%" stop-color="#0e1a24" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0a0c12"/>
+    </radialGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#rajeshBg)"/>
+  <!-- shoulders / kurta -->
+  <path d="M34 200 C34 158 64 144 100 144 C136 144 166 158 166 200 Z" fill="#1f6f7e"/>
+  <path d="M100 144 L100 200" stroke="#15525e" stroke-width="2" opacity="0.6"/>
+  <!-- neck -->
+  <rect x="88" y="120" width="24" height="34" rx="11" fill="#b9784e"/>
+  <!-- head -->
+  <ellipse cx="100" cy="92" rx="40" ry="45" fill="#c68a5e"/>
+  <!-- ears -->
+  <circle cx="60" cy="94" r="7" fill="#c68a5e"/>
+  <circle cx="140" cy="94" r="7" fill="#c68a5e"/>
+  <!-- hair -->
+  <path d="M58 86 C56 50 144 50 142 86 C140 66 132 54 100 54 C68 54 60 66 58 86 Z" fill="#23262e"/>
+  <!-- eyebrows -->
+  <path d="M78 84 q8 -5 16 0" stroke="#23262e" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M106 84 q8 -5 16 0" stroke="#23262e" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- eyes -->
+  <circle cx="86" cy="93" r="4.2" fill="#1b1d22"/>
+  <circle cx="114" cy="93" r="4.2" fill="#1b1d22"/>
+  <!-- nose -->
+  <path d="M100 98 l-3 12 q3 3 6 0" stroke="#a86c42" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <!-- mustache -->
+  <path d="M84 116 q16 9 32 0 q-16 5 -32 0 Z" fill="#23262e"/>
+  <!-- mouth -->
+  <path d="M88 124 q12 7 24 0" stroke="#7d4a2c" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Aarav Sharma">
+  <defs>
+    <radialGradient id="aaravBg" cx="50%" cy="36%" r="78%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.38"/>
+      <stop offset="60%" stop-color="#1a1426" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0a0c12"/>
+    </radialGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#aaravBg)"/>
+  <!-- t-shirt / shoulders -->
+  <path d="M42 200 C42 166 68 154 100 154 C132 154 158 166 158 200 Z" fill="#6d3bb0"/>
+  <path d="M84 156 q16 14 32 0" stroke="#8b5cd6" stroke-width="4" fill="none" opacity="0.7"/>
+  <!-- neck -->
+  <rect x="90" y="128" width="20" height="30" rx="9" fill="#c98f5f"/>
+  <!-- head (younger: rounder, bigger) -->
+  <ellipse cx="100" cy="96" rx="38" ry="40" fill="#d6a273"/>
+  <!-- ears -->
+  <circle cx="63" cy="98" r="6.5" fill="#d6a273"/>
+  <circle cx="137" cy="98" r="6.5" fill="#d6a273"/>
+  <!-- spiky young hair -->
+  <path d="M62 88 C60 58 140 58 138 88 C138 70 128 60 100 60 C72 60 62 70 62 88 Z" fill="#221f29"/>
+  <path d="M74 64 l6 -12 6 12 M94 60 l6 -13 6 13 M114 64 l6 -12 6 12" fill="#221f29"/>
+  <!-- eyebrows -->
+  <path d="M80 90 q7 -3 13 0" stroke="#221f29" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M107 90 q7 -3 13 0" stroke="#221f29" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <!-- big cheerful eyes -->
+  <circle cx="86" cy="98" r="4.6" fill="#1b1d22"/>
+  <circle cx="114" cy="98" r="4.6" fill="#1b1d22"/>
+  <circle cx="87.6" cy="96.6" r="1.4" fill="#fff"/>
+  <circle cx="115.6" cy="96.6" r="1.4" fill="#fff"/>
+  <!-- nose -->
+  <path d="M100 102 l-2 8 q2 2 4 0" stroke="#b3764a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- big smile -->
+  <path d="M85 120 q15 12 30 0" stroke="#7d4a2c" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

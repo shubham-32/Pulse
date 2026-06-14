@@ -11,14 +11,7 @@
 
 import { NavLink, useNavigate } from 'react-router-dom';
 import { usePulse } from '../hooks/PulseProvider.jsx';
-
-// Initials from a full name, e.g. "Rajesh Sharma" -> "RS".
-function initialsOf(name = '') {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] || '';
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return (first + last).toUpperCase();
-}
+import Avatar from './Avatar.jsx';
 
 // --- Inline flat SVG icons (stroke-based, currentColor) -------------------
 // 24x24 viewBox, 1.6 stroke. currentColor lets the link control the tint.
@@ -203,13 +196,8 @@ export default function NavRail() {
       {currentMember && (
         <div className="mt-auto flex w-full flex-col items-center gap-2 px-2">
           <div className="my-1 h-px w-8 bg-white/10" />
-          <span
-            aria-hidden="true"
-            title={`${currentMember.name} · ${currentMember.relationship}`}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-obsidian"
-            style={{ backgroundColor: currentMember.avatarColor }}
-          >
-            {initialsOf(currentMember.name)}
+          <span title={`${currentMember.name} · ${currentMember.relationship}`}>
+            <Avatar member={currentMember} size={36} />
           </span>
           <span className="hidden md:block max-w-full truncate text-[10px] font-medium text-white/60">
             {currentMember.name.split(' ')[0]}

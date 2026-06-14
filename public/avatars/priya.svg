@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Priya Sharma">
+  <defs>
+    <radialGradient id="priyaBg" cx="50%" cy="36%" r="78%">
+      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.36"/>
+      <stop offset="60%" stop-color="#231019" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0a0c12"/>
+    </radialGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#priyaBg)"/>
+  <!-- saree drape / shoulders -->
+  <path d="M32 200 C32 156 66 142 100 142 C134 142 168 156 168 200 Z" fill="#a33064"/>
+  <path d="M118 146 C140 156 150 176 150 200" stroke="#d9609a" stroke-width="5" fill="none" opacity="0.7"/>
+  <!-- neck -->
+  <rect x="88" y="120" width="24" height="32" rx="11" fill="#c2885a"/>
+  <!-- hair behind -->
+  <path d="M54 96 C50 52 150 52 146 96 C150 72 132 50 100 50 C68 50 50 72 54 96 Z" fill="#23222a"/>
+  <!-- head -->
+  <ellipse cx="100" cy="92" rx="39" ry="45" fill="#d29a6a"/>
+  <!-- ears + earrings -->
+  <circle cx="61" cy="95" r="6.5" fill="#d29a6a"/>
+  <circle cx="139" cy="95" r="6.5" fill="#d29a6a"/>
+  <circle cx="61" cy="106" r="3" fill="#f5c542"/>
+  <circle cx="139" cy="106" r="3" fill="#f5c542"/>
+  <!-- hair front center-part -->
+  <path d="M61 84 C62 56 138 56 139 84 C134 66 120 56 100 56 C80 56 66 66 61 84 Z" fill="#23222a"/>
+  <path d="M100 56 L100 78" stroke="#171620" stroke-width="2" opacity="0.6"/>
+  <!-- bun -->
+  <circle cx="100" cy="50" r="11" fill="#1d1c24"/>
+  <!-- bindi -->
+  <circle cx="100" cy="74" r="3.4" fill="#e23b6d"/>
+  <!-- eyebrows -->
+  <path d="M79 86 q8 -4 15 0" stroke="#23222a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M106 86 q8 -4 15 0" stroke="#23222a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <!-- eyes -->
+  <circle cx="86" cy="94" r="4" fill="#1b1d22"/>
+  <circle cx="114" cy="94" r="4" fill="#1b1d22"/>
+  <!-- nose -->
+  <path d="M100 99 l-2.5 11 q2.5 3 5 0" stroke="#b3764a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <!-- smile -->
+  <path d="M88 120 q12 9 24 0" stroke="#9a4a5e" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+</svg>
