@@ -1,25 +1,43 @@
-# PULSE — Ambient Smart Home Dashboard
+# PULSE — Ambient Smart Home for Indian Households
 
-PULSE is a single-page React dashboard for a next-generation **Edge-ML / Acoustic Sensor Fusion** smart home platform built for Indian households. It visualizes real-time acoustic detection, the AI's reasoning, learned daily routines, and AI-managed appliances in one ambient, glassmorphism interface.
+PULSE is a **multi-page React application** for a next-generation **Edge-ML / Acoustic + Video Sensor Fusion** smart home platform built for Indian households. It understands household context and **anticipates** actions — morning pooja, pressure-cooker schedules, water-motor timings, power cuts, evening kitchen prep — instead of waiting for explicit commands.
 
-> This is the front-end (UI) version. It is fully state-driven and backend-ready — all data flows through a single controller with clearly marked integration seams for a future Python / AWS Bedrock (agentic AI) backend.
+> Front-end product (UI). Fully state-driven and backend-ready — all data flows through one controller with clearly marked integration seams for a future Python / AWS Bedrock (agentic AI) backend.
 
 ---
 
-## Features
+## Highlights
 
-- **The Acoustic Pulse** — a glowing glass sphere with an animated dual-waveform (flowing cyan/purple sine waves + orange/gold spectrum spikes) that spikes on each acoustic trigger.
-- **Household Rhythm Timeline** — a data-driven vertical timeline of learned routine windows (Morning Pooja, Smart Power-Cut Delay, Intelligent Water Fill, Evening Kitchen Prep).
-- **Reasoning Engine** — a macOS-style terminal that streams the AI's structured reasoning (Acoustic Trigger → Context Check → Action) with live timestamps.
-- **Intervention Cards** — AI-managed appliance cards (Kitchen Exhaust, Living Room Fan, Water Geyser, Balcony Lights) that update and glow when activated.
+- **Ambient Dashboard (hero)** — a glowing glass acoustic sphere with a live dual-waveform, a learned **Household Rhythm Timeline**, **PULSE Predicts** anticipation cards (Approve / Snooze), an agent-tagged **Reasoning Engine** terminal, an **Ask PULSE** conversational bar, a live **sensor-fusion video tile**, and a 16-device intervention shelf.
+- **Anticipation, not just response** — "PULSE Predicts" surfaces upcoming actions before they happen (the core of the problem statement).
+- **Agentic reasoning** — the terminal streams decisions attributed to collaborating agents ([KitchenAgent], [EnergyAgent], [SecurityAgent], …).
+- **Conversational AI (mocked)** — Ask PULSE handles commands, "why" explainability, and presence questions.
+- **Sensor fusion** — audio + simulated video detections flow through one unified controller.
+- **Multi-page product** — Home ID login, Rooms & device controls, Family + Announcements/Intercom, Insights report, Automations, Settings.
+- **Polished UX** — fixed-viewport dashboard with per-pane scrolling, GPU-friendly animation, reduced-motion + larger-text accessibility toggles.
+
+---
+
+## Pages
+
+| Route | Page | What it does |
+|-------|------|--------------|
+| `/login` | Login | Home ID + member select + demo PIN (any 4 digits) |
+| `/` | Dashboard | The ambient hero: sphere, timeline, predicts, reasoning, Ask PULSE, video, devices |
+| `/rooms` | Rooms & Devices | Devices grouped by room with power/speed/brightness/temperature controls, manual override + "Return to AI" |
+| `/family` | Household | Member cards (avatar, relationship, age, presence) + Announcements / Intercom broadcast |
+| `/insights` | Home Insights | Outcome report: ₹ saved, energy, water-motor runtime, power-cuts handled, routine adherence, alerts |
+| `/automations` | Automations | Enable/disable learned routines + approve/snooze predictions |
+| `/settings` | Settings | Reduced-motion + larger-text toggles, home info, sign out |
 
 ---
 
 ## Tech Stack
 
 - **React 18** + **Vite**
-- **Tailwind CSS** (glassmorphism theme, obsidian + copper ambient palette)
-- **Framer Motion** (sphere, waveform, log streaming, card animations)
+- **React Router** (multi-page routing + auth gate)
+- **Tailwind CSS** (obsidian + copper glassmorphism theme)
+- **Framer Motion** (sphere, waveform, transitions, streaming logs)
 - Fonts: **Inter** (UI) + **Fira Code** (terminal)
 
 ---
@@ -27,18 +45,13 @@ PULSE is a single-page React dashboard for a next-generation **Edge-ML / Acousti
 ## Getting Started
 
 ```bash
-# 1. install dependencies
 npm install
-
-# 2. start the dev server
 npm run dev
 ```
 
-Then open the URL Vite prints (default **http://localhost:5173/**).
+Open the URL Vite prints (default **http://localhost:5173/**). Sign in with the prefilled Home ID, pick a member, and enter any 4-digit PIN.
 
-> ⚠️ Do **not** use the VS Code "Go Live" / Live Server extension — this is a Vite app and the JSX must be compiled by the dev server, not served as static files.
-
-### Other scripts
+> Do not use the VS Code "Go Live" / Live Server extension — this is a Vite app; the JSX must be compiled by the dev server.
 
 ```bash
 npm run build     # production build to dist/
@@ -47,98 +60,70 @@ npm run preview   # preview the production build
 
 ---
 
-## Architecture & Backend Readiness
+## Architecture
 
-All UI lives in `src/PulseDashboard.jsx`. State (timeline events, appliances, reasoning log, wave amplitude) is declared at the top of the component — nothing is hardcoded in the render tree, so any value can be driven live from the backend.
-
-The single event pipeline is:
-
-```js
-handleAcousticTrigger(audioProfile, confidenceScore)
+```
+src/
+├── App.jsx                 # routing + auth gate (BrowserRouter > PulseProvider > Routes)
+├── main.jsx
+├── index.css               # Tailwind + theme + GPU keyframes + a11y classes
+├── hooks/
+│   ├── usePulseController.js   # ALL state + the single event pipeline + demo drivers
+│   └── PulseProvider.jsx       # one controller instance shared via context (usePulse())
+├── data/
+│   ├── constants.js            # palette, profile→appliance, agents, helpers
+│   └── initialState.js         # seed: home, members, rooms, appliances, anticipations, energy…
+├── components/             # AppLayout, NavRail, AcousticPulse, ReasoningTerminal,
+│                           # AnticipationPanel, AskPulseBar, SensoryVideoPane,
+│                           # InterventionShelf, RoomDeviceCard, MemberCard,
+│                           # AnnouncementsPanel, MetricCard, GlassPanel, …
+└── pages/                  # Login, Dashboard, Rooms, Family, Insights, Automations, Settings
 ```
 
-When invoked it (1) spikes the waveform amplitude, (2) pushes structured entries to the reasoning terminal, and (3) updates the mapped appliance — in one atomic update path.
+**Single source of truth.** `usePulseController` owns every piece of state and the controller; `PulseProvider` instantiates it once so all pages share the same live state (and the demo drivers run once). The unified entry point is:
 
-A demo interval currently drives sample triggers so the dashboard feels live. Integration points are marked with:
+```js
+handleSensoryTrigger(type, payload)   // type: 'audio' | 'video'
+```
+
+It spikes the sphere amplitude, streams a structured agent-attributed reasoning burst, and updates the mapped appliance — in one atomic path. Every state-mutating seam is marked:
 
 ```js
 // TODO: Wire API connection to Python/AWS Bedrock endpoint here
 ```
 
-Replace the demo interval with a live feed (e.g. a WebSocket from the edge device) to connect the real backend.
+---
+
+## Backend Readiness (next phase)
+
+The UI is intentionally decoupled from data. To go live:
+- Replace the demo intervals in `usePulseController` with a live feed (WebSocket / WebRTC) from the edge device.
+- Implement the marked `// TODO` seams against the Python / AWS Bedrock backend (NLU for Ask PULSE, routine learning, anticipation, auth/Home-ID verification, TTS for announcements).
+- The agent-tagged reasoning log is shaped for an agentic-AI backend (per-agent attribution already in the data model).
 
 ---
 
-## Project Structure
+## Roadmap
 
-```
-.
-├── index.html
-├── package.json
-├── vite.config.js
-├── tailwind.config.js
-├── postcss.config.js
-├── README.md
-├── .gitignore
-├── src/
-│   ├── main.jsx
-│   ├── App.jsx
-│   ├── index.css
-│   └── PulseDashboard.jsx        # the full dashboard + state + event pipeline
-└── .kiro/specs/pulse-smart-home/ # design, requirements, tasks (spec docs)
-```
-
-> `node_modules/` and `dist/` are intentionally git-ignored — run `npm install` and `npm run build` to regenerate them.
-
----
-
-## Roadmap / Future Tasks
-
-### Performance & UX
-- [ ] Optimize animation performance (animate only `transform`/`opacity`, move waveform to CSS keyframes / a single `requestAnimationFrame` loop, reduce simultaneous blur layers).
-- [ ] Respect `prefers-reduced-motion` and add a "reduce motion" toggle.
-- [ ] Fixed-viewport layout (`h-screen`) with **per-pane scrolling** so the page itself never scrolls — only each pane's content does.
-
-### Household & Personalization
-- [ ] Family/household account with member profiles (name, relationship, date of birth/age, avatar, presence: home/away).
-- [ ] Per-member routines tied to the timeline (pooja, study time, work hours).
-- [ ] Roles & permissions (admin vs. member).
-- [ ] Per-room organization (Kitchen, Living Room, Bedroom, Balcony).
-- [ ] Multi-language support (Hindi / regional languages) and accessibility options.
-
-### Sensory Fusion
-- [ ] **Live video pane** — camera feed(s) alongside the audio pulse, with motion/object-detection overlays.
-- [ ] Generalize the event pipeline to `handleSensoryTrigger(type, payload)` for audio **and** video events.
-- [ ] Clear privacy controls and mic/camera active indicators.
-
-### Devices & Automation
-- [ ] Device registry / discovery (add, remove, pair devices; assign to rooms and members).
-- [ ] Per-device controls beyond on/off (fan speed, geyser temperature, light brightness/color, AC mode/temp).
-- [ ] Automation rules editor (if-this-then-that), schedules, scenes ("Good Morning", "Away").
-- [ ] Device health/status (online/offline, firmware, battery).
-- [ ] Manual override + "undo this automation" / "don't do this again".
-
-### Insights
-- [ ] Energy & cost summary (especially for power-cut delay and geyser pre-heat).
-- [ ] Notifications/alerts feed (e.g. "Geyser left on", "Unusual sound at 2 AM").
-
-### Backend Integration (Agentic AI)
-- [ ] Replace the demo interval with a live WebSocket/stream from the edge device.
-- [ ] Connect the Python / AWS Bedrock agentic backend at the marked `// TODO` seams.
-- [ ] Make the **Household Rhythm Timeline** update dynamically from backend-learned routines (the UI is already data-driven; only the live data source is pending).
-- [ ] Extend reasoning-log entries with an `agent` field so the terminal attributes decisions to specific agents (e.g. `[KitchenAgent]`, `[EnergyAgent]`, `[SecurityAgent]`).
+- [x] Ambient dashboard + acoustic pulse + reasoning terminal
+- [x] Performance pass + per-pane scrolling
+- [x] Agent-attributed reasoning, PULSE Predicts, Ask PULSE
+- [x] Multi-page product: login/Home ID, Rooms, Family, Insights, Automations, Settings
+- [x] Household Announcements / Intercom
+- [x] Sensor-fusion video pane
+- [x] Accessibility preferences
+- [ ] Live backend: Bedrock + real sensors/devices, persistence, TTS
+- [ ] Real authentication & multi-home support
 
 ---
 
 ## Collaboration
 
-This is a team project. To contribute:
-
 ```bash
-git clone <repo-url>
-cd <repo>
+git clone https://github.com/shubham-32/Pulse.git
+cd Pulse
 npm install
 npm run dev
 ```
 
-Create a branch for your work, commit, push, and open a pull request. Collaborators must be invited via **GitHub repo → Settings → Collaborators**.
+Create a branch, commit, push, open a PR. Collaborators are invited via **GitHub repo → Settings → Collaborators**.

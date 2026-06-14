@@ -18,3 +18,252 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* .pulse-scroll — subtle, thin, low-opacity scrollbar for the per-pane scroll
+   areas (Task 10). Tuned for the dark glass theme so it reads as ambient chrome
+   rather than a chunky OS scrollbar. Firefox uses scrollbar-width/color; WebKit
+   uses the ::-webkit-scrollbar pseudo-elements. */
+.pulse-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.pulse-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.pulse-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pulse-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+.pulse-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+/* ---------------------------------------------------------------------------
+   AcousticPulse performance animations (Task 11, Requirement 4.3)
+   These run the perpetual waveform motion off the React/main thread using pure
+   CSS keyframes that touch ONLY GPU-friendly properties (transform + opacity).
+   They replace the former per-element Framer Motion loops (18 bars) and the
+   SVG `d`-morphing sine paths, while keeping the same visual rhythm.
+--------------------------------------------------------------------------- */
+
+/* Spectrum bars — staggered scaleY/opacity jitter (was 18 JS-driven loops).
+   transform-box/transform-origin are set inline on each <rect> so scaleY grows
+   from the bar's own center; animation-delay is set inline per bar. */
+@keyframes pulse-bar-jitter {
+  0% {
+    transform: scaleY(0.32);
+    opacity: 0.55;
+  }
+  25% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(0.5);
+    opacity: 0.7;
+  }
+  75% {
+    transform: scaleY(0.82);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleY(0.32);
+    opacity: 0.55;
+  }
+}
+
+.pulse-bar {
+  animation: pulse-bar-jitter 1.4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Sine waves — a seamless horizontal "flow" produced by translating an
+   extended (periodic) static path by exactly one wavelength, then looping.
+   No SVG `d` morphing, no main-thread work. Distance is supplied per-path via
+   the --pulse-flow-dist custom property; duration via inline animationDuration. */
+@keyframes pulse-sine-flow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--pulse-flow-dist, 0));
+  }
+}
+
+.pulse-sine {
+  animation-name: pulse-sine-flow;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+/* Accessibility: honor reduced-motion by holding the perpetual motion in a
+   calm mid-state instead of looping (sets up Task 16/23). The sphere/bloom/ring
+   Framer loops are disabled via a JS guard in AcousticPulse.jsx. */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-bar {
+    animation: none !important;
+    transform: scaleY(0.7);
+    opacity: 0.85;
+  }
+
+  .pulse-sine {
+    animation: none !important;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   .pulse-range — themed range slider for per-device controls (Task 20).
+   On-brand obsidian + cyan: a thin glass track with a glowing cyan thumb that
+   shows a clear focus ring for keyboard users. Cross-browser (WebKit + Firefox).
+--------------------------------------------------------------------------- */
+.pulse-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+  cursor: pointer;
+}
+
+.pulse-range:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pulse-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 9999px;
+  background: #22d3ee;
+  border: 2px solid rgba(5, 6, 11, 0.9);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
+  cursor: pointer;
+}
+
+.pulse-range::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 9999px;
+  background: #22d3ee;
+  border: 2px solid rgba(5, 6, 11, 0.9);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
+  cursor: pointer;
+}
+
+.pulse-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.45), 0 0 10px rgba(34, 211, 238, 0.6);
+}
+
+.pulse-range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.45), 0 0 10px rgba(34, 211, 238, 0.6);
+}
+
+/* ---------------------------------------------------------------------------
+   SensoryVideoPane (Task 22) — cheap, GPU-friendly "simulated camera feed"
+   motion. A slow diagonal light sweep + a thin moving scanline sell a live
+   feed without any per-frame JS. Both touch transform/opacity only and are
+   disabled under prefers-reduced-motion (the bounding-box overlays are also
+   suppressed via a JS guard in SensoryVideoPane.jsx).
+--------------------------------------------------------------------------- */
+@keyframes pulse-cam-sweep {
+  0% {
+    transform: translateX(-65%) skewX(-12deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.45;
+  }
+  60% {
+    transform: translateX(75%) skewX(-12deg);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateX(170%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
+.pulse-cam-sweep {
+  animation: pulse-cam-sweep 7s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes pulse-cam-scan {
+  from {
+    transform: translateY(-120%);
+  }
+  to {
+    transform: translateY(120%);
+  }
+}
+
+.pulse-cam-scan {
+  animation: pulse-cam-scan 4.5s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-cam-sweep,
+  .pulse-cam-scan {
+    animation: none !important;
+    opacity: 0.2;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Accessibility preferences (Task 23) — user-driven, class-based toggles.
+
+   These mirror the prefers-reduced-motion media queries above but are keyed to
+   a class on <html> (.pulse-reduce-motion) so the in-app "Reduced Motion"
+   toggle works even when the OS setting is OFF. The controller reflects the
+   preference onto document.documentElement; AcousticPulse's JS-driven Framer
+   loops (sphere breathing, bloom, ring pulse) read the same preference value.
+--------------------------------------------------------------------------- */
+.pulse-reduce-motion .pulse-bar {
+  animation: none !important;
+  transform: scaleY(0.7);
+  opacity: 0.85;
+}
+
+.pulse-reduce-motion .pulse-sine {
+  animation: none !important;
+  transform: none;
+}
+
+.pulse-reduce-motion .pulse-cam-sweep,
+.pulse-reduce-motion .pulse-cam-scan {
+  animation: none !important;
+  opacity: 0.2;
+}
+
+/* Calm any generic Tailwind keyframe utilities (pulse/ping/spin/bounce) that
+   loop perpetually, so the toggle quiets ambient chrome app-wide too. */
+.pulse-reduce-motion .animate-pulse,
+.pulse-reduce-motion .animate-ping,
+.pulse-reduce-motion .animate-spin,
+.pulse-reduce-motion .animate-bounce {
+  animation: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   .pulse-large-text — bumps the base font size for readability. Conservative
+   (~1.1x via the root font-size) so rem-based type scales up uniformly without
+   breaking the bounded dashboard layout; per-pane scroll still contains any
+   overflow. Applied to :root so it cascades to the whole document.
+--------------------------------------------------------------------------- */
+.pulse-large-text {
+  font-size: 110%;
+}
