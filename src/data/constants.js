@@ -25,6 +25,7 @@ export const PROFILE_TO_APPLIANCE = {
   tap_running:    'geyser',
   footsteps:      'balcony',
   fan_hum:        'fan',
+  puja_ghanti:    'purifier', // ritual bell -> air purifier (incense smoke)
 };
 
 /**
@@ -71,6 +72,13 @@ export const ACTION_TEXT = {
     applianceState: 'Fan Auto-Adjusted',
     agent: 'EnergyAgent',
   },
+  puja_ghanti: {
+    label: 'Puja Ghanti',
+    context: 'Evening Ritual Window · Bell-frequency pattern confirmed · Incense smoke likely',
+    action: 'Air Purifier ON — Clearing incense particles',
+    applianceState: 'ON — Incense Detected',
+    agent: 'PujaAgent',
+  },
 };
 
 /**
@@ -89,6 +97,42 @@ export const AGENT_STYLE = {
   // Household intercom relays (Task 19) — announcements spoken on all devices.
   IntercomAgent: { textClass: 'text-accent-cyan', prefix: '📢' },
 };
+
+/**
+ * AGENTS — the roster of specialist agents in PULSE's "Bedrock's Brain". Each
+ * reasoning entry carries an `agent`; the terminal renders a color-coded
+ * [Agent] tag (agentColor) and shows an active-agents legend so the multi-agent
+ * collaboration is visible. label = short display name, hex = accent color.
+ */
+export const AGENTS = {
+  SystemAgent:     { label: 'System',   hex: '#9ca3af' },
+  KitchenAgent:    { label: 'Kitchen',  hex: '#f59e0b' },
+  EnergyAgent:     { label: 'Energy',   hex: '#22d3ee' },
+  SecurityAgent:   { label: 'Security', hex: '#fb7185' },
+  SafetyAgent:     { label: 'Safety',   hex: '#ef4444' },
+  ComfortAgent:    { label: 'Comfort',  hex: '#a855f7' },
+  AirQualityAgent: { label: 'Air',      hex: '#2dd4bf' },
+  LearningAgent:   { label: 'Learning', hex: '#e879f9' },
+  RoutineAgent:    { label: 'Routine',  hex: '#eab308' },
+  IntercomAgent:   { label: 'Intercom', hex: '#38bdf8' },
+  PujaAgent:       { label: 'Puja',     hex: '#ec4899' },
+};
+
+/** Accent hex for an agent name (falls back to a neutral grey). */
+export function agentColor(name) {
+  return AGENTS[name]?.hex || '#9ca3af';
+}
+
+/** Curated roster shown in the terminal's "active agents" legend. */
+export const AGENT_LEGEND = [
+  'KitchenAgent',
+  'EnergyAgent',
+  'SecurityAgent',
+  'SafetyAgent',
+  'AirQualityAgent',
+  'LearningAgent',
+  'PujaAgent',
+];
 
 /**
  * VIDEO_EVENT_TEXT — per visual-event presentation strings used to build the

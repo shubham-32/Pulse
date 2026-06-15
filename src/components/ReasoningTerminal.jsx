@@ -4,7 +4,8 @@
 
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AGENT_STYLE } from '../data/constants.js';
+import { AGENT_STYLE, AGENTS, AGENT_LEGEND, agentColor } from '../data/constants.js';
+import StreamingText from './StreamingText.jsx';
 
 /**
  * classifyLogLine — derive accent styling for a reasoning entry by inspecting
@@ -56,6 +57,15 @@ export function classifyLogLine(text) {
 export default function ReasoningTerminal({ log }) {
   const scrollRef = useRef(null);
 
+  // The most recently active agent (latest entry that carries one) — its dot in
+  // the legend gets a glowing ring so you can see which agent just "spoke".
+  const activeAgent = (() => {
+    for (let i = log.length - 1; i >= 0; i -= 1) {
+      if (log[i].agent && AGENTS[log[i].agent]) return log[i].agent;
+    }
+    return null;
+  })();
+
   // Auto-scroll to the newest entry whenever the log changes (Requirement 5.4).
   useEffect(() => {
     const el = scrollRef.current;
@@ -76,8 +86,39 @@ export default function ReasoningTerminal({ log }) {
         <span className="flex-1 text-center font-mono text-[11px] text-white/35">
           bedrock-reasoning — zsh
         </span>
-        {/* Spacer to keep the title visually centered against the dots. */}
         <span className="w-[52px]" aria-hidden="true" />
+      </div>
+
+      {/* Active-agents legend — the multi-agent "Bedrock's Brain" roster. The
+          most recently active agent's dot glows so the collaboration is visible. */}
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-white/10 bg-white/[0.03] px-3 py-1.5">
+        <span className="font-mono text-[9px] uppercase tracking-wider text-white/35">
+          Agents
+        </span>
+        {AGENT_LEGEND.map((name) => {
+          const hex = agentColor(name);
+          const isActive = activeAgent === name;
+          return (
+            <span key={name} className="flex items-center gap-1" title={name}>
+              <motion.span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: hex }}
+                animate={
+                  isActive
+                    ? { boxShadow: [`0 0 0 0 ${hex}00`, `0 0 8px 2px ${hex}`, `0 0 0 0 ${hex}00`] }
+                    : { boxShadow: 'none' }
+                }
+                transition={isActive ? { duration: 1.2, repeat: Infinity } : { duration: 0.2 }}
+              />
+              <span
+                className="font-mono text-[9px]"
+                style={{ color: isActive ? hex : 'rgba(255,255,255,0.4)' }}
+              >
+                {AGENTS[name].label}
+              </span>
+            </span>
+          );
+        })}
       </div>
 
       {/* Scrolling console body (Requirement 5.2). On lg+ the body relies on
@@ -91,6 +132,7 @@ export default function ReasoningTerminal({ log }) {
         <AnimatePresence initial={false}>
           {log.map((entry) => {
             const { textClass, prefix } = classifyLogLine(entry.text);
+            const showAgent = entry.agent && AGENTS[entry.agent];
             return (
               <motion.div
                 key={entry.id}
@@ -99,11 +141,21 @@ export default function ReasoningTerminal({ log }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.28, ease: 'easeOut' }}
-                className="flex gap-2 whitespace-pre-wrap break-words py-0.5"
+                className="flex flex-wrap gap-x-2 gap-y-0.5 whitespace-pre-wrap break-words py-0.5"
               >
                 <span className="shrink-0 text-white/30">[{entry.timestamp}]</span>
+                {showAgent && (
+                  <span
+                    className="shrink-0 font-semibold"
+                    style={{ color: agentColor(entry.agent) }}
+                  >
+                    [{entry.agent}]
+                  </span>
+                )}
                 <span className={'shrink-0 ' + textClass}>{prefix}</span>
-                <span className={textClass}>{entry.text}</span>
+                <span className={'min-w-0 ' + textClass}>
+                  <StreamingText text={entry.text} speed={55} />
+                </span>
               </motion.div>
             );
           })}

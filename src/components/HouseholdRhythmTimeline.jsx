@@ -30,6 +30,9 @@ export default function HouseholdRhythmTimeline({ events, colorMap }) {
 
       {events.map((event) => {
         const tokens = colorMap[event.color] || colorMap.cyan;
+        const learned = event.learned;
+        const addedBy = event.addedBy;
+        const highlight = learned || addedBy;
         return (
           <motion.li
             key={event.id}
@@ -40,8 +43,9 @@ export default function HouseholdRhythmTimeline({ events, colorMap }) {
             }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
           >
-            {/* Glowing node on the connector rule */}
-            <span
+            {/* Glowing node on the connector rule. Learned / member-added
+                routines pulse to draw the eye to what just appeared. */}
+            <motion.span
               aria-hidden="true"
               className={
                 'relative z-10 mt-1 h-3.5 w-3.5 shrink-0 rounded-full ' +
@@ -49,16 +53,48 @@ export default function HouseholdRhythmTimeline({ events, colorMap }) {
                 tokens.dot
               }
               style={{ boxShadow: `0 0 10px 2px ${tokens.glow}, 0 0 20px 4px ${tokens.glow}55` }}
+              animate={
+                highlight
+                  ? { scale: [1, 1.35, 1], boxShadow: [`0 0 10px 2px ${tokens.glow}`, `0 0 18px 6px ${tokens.glow}`, `0 0 10px 2px ${tokens.glow}`] }
+                  : {}
+              }
+              transition={highlight ? { duration: 1.4, repeat: Infinity } : {}}
             />
 
             {/* Time + label */}
             <div className="flex min-w-0 flex-col leading-tight">
-              <span className="font-sans text-lg font-bold tabular-nums text-white">
-                {event.time}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-sans text-lg font-bold tabular-nums text-white">
+                  {event.time}
+                </span>
+                {learned && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-full border border-fuchsia-400/40 bg-fuchsia-400/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-fuchsia-300"
+                    style={{ boxShadow: '0 0 10px rgba(232,121,249,0.4)' }}
+                  >
+                    New · Learned
+                  </motion.span>
+                )}
+                {!learned && addedBy && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-cyan-300"
+                  >
+                    Added · {addedBy}
+                  </motion.span>
+                )}
+              </div>
               <span className="font-sans text-xs text-white/45">
                 {event.label}
               </span>
+              {learned && event.confidence != null && (
+                <span className="mt-0.5 font-mono text-[9px] text-fuchsia-300/70">
+                  pattern confidence {Math.round(event.confidence * 100)}%
+                </span>
+              )}
             </div>
           </motion.li>
         );

@@ -26,9 +26,9 @@ export const HOME_LABEL = 'Sharma Residence';
  */
 export const INITIAL_MEMBERS = [
   { id: 'rajesh',  name: 'Rajesh Sharma',  relationship: 'Father',      dob: '1978-04-12', avatarColor: '#22d3ee', presence: 'home', avatar: '/avatars/rajesh.svg' },
-  { id: 'priya',   name: 'Priya Sharma',   relationship: 'Mother',      dob: '1982-09-23', avatarColor: '#ec4899', presence: 'home', avatar: '/avatars/priya.svg' },
-  { id: 'aarav',   name: 'Aarav Sharma',   relationship: 'Son',         dob: '2010-01-15', avatarColor: '#a855f7', presence: 'away', avatar: '/avatars/aarav.svg' },
-  { id: 'lakshmi', name: 'Lakshmi Sharma', relationship: 'Grandmother', dob: '1951-07-08', avatarColor: '#f59e0b', presence: 'home', avatar: '/avatars/lakshmi.svg' },
+  { id: 'priya',   name: 'Saroj Sharma',   relationship: 'Mother',      dob: '1982-09-23', avatarColor: '#ec4899', presence: 'home', avatar: '/avatars/priya.svg' },
+  { id: 'aarav',   name: 'Shubham Sharma', relationship: 'Son',         dob: '2010-01-15', avatarColor: '#a855f7', presence: 'away', avatar: '/avatars/aarav.svg' },
+  { id: 'lakshmi', name: 'Lalita Sharma',  relationship: 'Grandmother', dob: '1951-07-08', avatarColor: '#f59e0b', presence: 'home', avatar: '/avatars/lakshmi.svg' },
 ];
 
 /** rooms — physical zones appliances are grouped into (Task 13). */
@@ -68,21 +68,30 @@ export const INITIAL_TIMELINE_EVENTS = [
  *   controls— type-appropriate control surface (not rendered yet)
  */
 export const INITIAL_APPLIANCES = [
+  // Balcony Lights + Purifier occupy the first row (puja-scene triggers).
   {
-    id: 'exhaust', name: 'Kitchen Exhaust', icon: 'fan', state: 'Managed by AI', active: false,
-    room: 'kitchen', type: 'exhaust', online: true, mode: 'ai', controls: { speed: 2 },
+    id: 'balcony', name: 'Balcony Lights', icon: 'bulb', state: 'Managed by AI', active: false,
+    room: 'balcony', type: 'light', online: true, mode: 'ai', controls: { brightness: 80 },
+  },
+  {
+    id: 'purifier', name: 'Air Purifier', icon: 'purifier', state: 'Auto — Air Quality Good', active: false,
+    room: 'bedroom', type: 'purifier', online: true, mode: 'ai', controls: { fanLevel: 'auto' },
   },
   {
     id: 'fan', name: 'Living Room Fan', icon: 'breeze', state: 'Managed by AI', active: false,
     room: 'living', type: 'fan', online: true, mode: 'ai', controls: { speed: 2 },
   },
   {
-    id: 'geyser', name: 'Water Geyser', icon: 'heater', state: 'Managed by AI', active: false,
+    id: 'exhaust', name: 'Kitchen Exhaust', icon: 'fan', state: 'Managed by AI', active: false,
+    room: 'kitchen', type: 'exhaust', online: true, mode: 'ai', controls: { speed: 2 },
+  },
+  {
+    id: 'geyser', name: 'Water Geyser', icon: 'heater', state: 'Off', active: false,
     room: 'bathroom', type: 'geyser', online: true, mode: 'ai', controls: { tempC: 45 },
   },
   {
-    id: 'balcony', name: 'Balcony Lights', icon: 'bulb', state: 'Managed by AI', active: false,
-    room: 'balcony', type: 'light', online: true, mode: 'ai', controls: { brightness: 80 },
+    id: 'kitchenlights', name: 'Kitchen Lights', icon: 'bulb', state: 'Managed by AI', active: false,
+    room: 'kitchen', type: 'light', online: true, mode: 'ai', controls: { brightness: 90 },
   },
 
   // --- Expanded smart-home fleet (UX polish): common, market-available Indian
@@ -91,10 +100,6 @@ export const INITIAL_APPLIANCES = [
   {
     id: 'ac', name: 'Smart AC', icon: 'ac', state: 'Eco Mode — 24°C', active: false,
     room: 'bedroom', type: 'climate', online: true, mode: 'ai', controls: { tempC: 24, fanSpeed: 'auto' },
-  },
-  {
-    id: 'purifier', name: 'Air Purifier', icon: 'purifier', state: 'Auto — Air Quality Good', active: false,
-    room: 'bedroom', type: 'purifier', online: true, mode: 'ai', controls: { fanLevel: 'auto' },
   },
   {
     id: 'tv', name: 'Smart TV', icon: 'tv', state: 'Idle — Standby', active: false,

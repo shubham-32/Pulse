@@ -259,6 +259,28 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+   Audio track playhead — a vertical line that sweeps left-to-right across the
+   waveform visualization when a track is playing.
+--------------------------------------------------------------------------- */
+@keyframes audio-playhead-scan {
+  0%   { left: 0; }
+  100% { left: calc(100% - 2px); }
+}
+
+.audio-playhead {
+  animation: audio-playhead-scan 8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .audio-playhead { animation: none !important; left: 0; }
+}
+
+.pulse-reduce-motion .audio-playhead {
+  animation: none !important;
+  left: 0;
+}
+
+/* ---------------------------------------------------------------------------
    .pulse-large-text — bumps the base font size for readability. Conservative
    (~1.1x via the root font-size) so rem-based type scales up uniformly without
    breaking the bounded dashboard layout; per-pane scroll still contains any

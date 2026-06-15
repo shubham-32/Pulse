@@ -245,8 +245,21 @@ export default function usePulseController() {
   const [anticipations, setAnticipations] = useState(INITIAL_ANTICIPATIONS);
   const [energy] = useState(INITIAL_ENERGY);
 
+  // Demo Director (Option A): when true, the ambient random drivers run so the
+  // dashboard feels live on its own. A scripted scenario pauses them (sets this
+  // false) so the staged choreography plays cleanly for filming.
+  const [isAutoDemo, setIsAutoDemo] = useState(true);
+  const toggleAutoDemo = useCallback(() => setIsAutoDemo((v) => !v), []);
+
+  // Demo Director cinematic beat — the current "Anticipation Theater" step the
+  // center-stage overlay renders during a scripted scenario (null when idle).
+  const [scenarioBeat, setScenarioBeat] = useState(null);
+
   // Holds pending amplitude-decay timers so we can clear them on unmount.
   const decayTimersRef = useRef([]);
+  // Holds pending scenario step timers so we can clear/replace a running
+  // scripted scenario (Demo Director) and clean up on unmount.
+  const scenarioTimersRef = useRef([]);
 
   // --- The single event pipeline controller (Requirement 7.1, 7.2) ----------
   //
@@ -627,6 +640,112 @@ export default function usePulseController() {
     });
   }, []);
 
+  // --- Puja Ghanti audio trigger (Audio 1 playback) -------------------------
+  //
+  // All timestamps are fixed to the 18:45 evening window so the demo reads as
+  // a real recorded session rather than reflecting the current clock.
+  //
+  //   Phase 1 (0 s)   — acoustic recognition logged, sphere spiked
+  //   Phase 2 (1.5 s) — AirQualityAgent infers incense smoke
+  //   Phase 3 (2.5 s) — left-panel timeline updated: "Evening Puja Arti"
+  //   Phase 4 (3.5 s) — Air Purifier turned ON
+  //   Phase 5 (4.5 s) — Balcony Lights ON for aarti ambiance
+  const triggerPujaAudio = useCallback(() => {
+    // Spike the acoustic sphere.
+    setWaveAmplitude(WAVE_SPIKE);
+    const decayT = setTimeout(() => setWaveAmplitude(WAVE_BASELINE), WAVE_DECAY_MS);
+    decayTimersRef.current.push(decayT);
+
+    // Phase 1 — 7 s: recognition burst (system needs time to analyse the audio).
+    const t0 = setTimeout(() => {
+      setReasoningLog((prev) => {
+        const entries = [
+          { id: nextLogId(), timestamp: '18:45:00', agent: 'PujaAgent',       text: 'Acoustic Trigger: Puja Ghanti Detected (96% Match)' },
+          { id: nextLogId(), timestamp: '18:45:00', agent: 'PujaAgent',       text: 'Context Check: Evening ritual window · Bell-frequency signature confirmed' },
+          { id: nextLogId(), timestamp: '18:45:00', agent: 'AirQualityAgent', text: 'Correlation: Ritual activity pattern — incense combustion imminent' },
+        ];
+        const merged = [...prev, ...entries];
+        return merged.length > LOG_CAP ? merged.slice(merged.length - LOG_CAP) : merged;
+      });
+    }, 7000);
+    decayTimersRef.current.push(t0);
+
+    // Phase 2 — 8.5 s: air quality reasoning.
+    const t1 = setTimeout(() => {
+      setReasoningLog((prev) => {
+        const entry = { id: nextLogId(), timestamp: '18:45:01', agent: 'AirQualityAgent', text: 'Inference: Fine particulate (PM2.5) rise predicted within 60 s — evaluating purification' };
+        const merged = [...prev, entry];
+        return merged.length > LOG_CAP ? merged.slice(merged.length - LOG_CAP) : merged;
+      });
+    }, 8500);
+    decayTimersRef.current.push(t1);
+
+    // Phase 3 — 9.5 s: register "Evening Puja Arti" in the left-panel timeline.
+    const t2 = setTimeout(() => {
+      setTimelineEvents((prev) => {
+        if (prev.some((e) => e.id === 'puja_eve')) return prev;
+        const updated = [
+          ...prev,
+          { id: 'puja_eve', time: '18:45', label: 'Evening Puja Arti', color: 'pink', enabled: true },
+        ];
+        updated.sort((a, b) => a.time.localeCompare(b.time));
+        return updated;
+      });
+      setReasoningLog((prev) => {
+        const entry = { id: nextLogId(), timestamp: '18:45:03', agent: 'RoutineAgent', text: 'Timeline updated: "Evening Puja Arti" registered in Household Rhythm' };
+        const merged = [...prev, entry];
+        return merged.length > LOG_CAP ? merged.slice(merged.length - LOG_CAP) : merged;
+      });
+    }, 9500);
+    decayTimersRef.current.push(t2);
+
+    // Phase 4 — 10.5 s: turn on air purifier.
+    const t3 = setTimeout(() => {
+      setAppliances((prev) =>
+        prev.map((a) =>
+          a.id === 'purifier'
+            ? { ...a, active: true, mode: 'ai', state: 'ON — Incense Detected' }
+            : a
+        )
+      );
+      setReasoningLog((prev) => {
+        const entry = { id: nextLogId(), timestamp: '18:45:05', agent: 'AirQualityAgent', text: 'Action Triggered: Air Purifier ON — clearing incense particles post-puja' };
+        const merged = [...prev, entry];
+        return merged.length > LOG_CAP ? merged.slice(merged.length - LOG_CAP) : merged;
+      });
+    }, 10500);
+    decayTimersRef.current.push(t3);
+
+    // Phase 5 — 11.5 s: turn on balcony lights for evening aarti ambiance.
+    const t4 = setTimeout(() => {
+      setAppliances((prev) =>
+        prev.map((a) =>
+          a.id === 'balcony'
+            ? { ...a, active: true, mode: 'ai', state: 'ON — Night Approaching' }
+            : a
+        )
+      );
+      setReasoningLog((prev) => {
+        const entry = { id: nextLogId(), timestamp: '18:45:07', agent: 'SecurityAgent', text: 'Action Triggered: Balcony Lights ON — Night approaching, aarti marks dusk' };
+        const merged = [...prev, entry];
+        return merged.length > LOG_CAP ? merged.slice(merged.length - LOG_CAP) : merged;
+      });
+    }, 11500);
+    decayTimersRef.current.push(t4);
+  }, []);
+
+  // Prepares the UI for audio mode: resets puja-scene devices to off and
+  // replaces the reasoning log with "waiting for audio" standby entries.
+  // Fixed 18:4x timestamps keep the demo session coherent.
+  const prepareAudioMode = useCallback(() => {
+    setAppliances((prev) =>
+      prev.map((a) => ({ ...a, active: false, mode: 'ai', state: 'Managed by AI' }))
+    );
+    setReasoningLog([
+      { id: nextLogId(), timestamp: '18:44:52', agent: 'SystemAgent', text: 'Acoustic sensor online — waiting for audio input' },
+    ]);
+  }, []);
+
   const toggleAppliancePower = useCallback(
     (id) => {
       // TODO: Wire API connection to Python/AWS Bedrock endpoint here
@@ -740,7 +859,333 @@ export default function usePulseController() {
     [appendLog]
   );
 
+  // --- Add / remove a household routine (member-authored) -------------------
+  //
+  // Any family member can add a routine from the Family page. It appends to the
+  // SAME timelineEvents state the dashboard Home Rhythm renders, so it appears
+  // there instantly (sorted by time), tagged with who added it.
+  const addRoutine = useCallback(
+    (routine) => {
+      const time = String(routine?.time || '').trim();
+      const label = String(routine?.label || '').trim();
+      if (!time || !label) return;
+      const byMemberId = routine?.byMemberId || currentMemberId || INITIAL_MEMBERS[0]?.id;
+      const member = INITIAL_MEMBERS.find((m) => m.id === byMemberId);
+      const addedBy = member?.name?.split(' ')[0] || null;
+      const palette = ['cyan', 'pink', 'orange', 'yellow', 'purple'];
+
+      setTimelineEvents((prev) => {
+        const color = palette[prev.length % palette.length];
+        const id = `rt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        const next = [...prev, { id, time, label, color, enabled: true, addedBy }];
+        next.sort((a, b) => a.time.localeCompare(b.time));
+        return next;
+      });
+
+      appendLog(
+        'RoutineAgent',
+        `Routine added by ${addedBy || 'a member'}: "${label}" at ${time} — synced to the household rhythm`
+      );
+    },
+    [appendLog, currentMemberId]
+  );
+
+  const removeRoutine = useCallback(
+    (id) => {
+      let removed = null;
+      setTimelineEvents((prev) => {
+        const t = prev.find((e) => e.id === id);
+        removed = t?.label || null;
+        return prev.filter((e) => e.id !== id);
+      });
+      if (removed) appendLog('RoutineAgent', `Routine removed: "${removed}"`);
+    },
+    [appendLog]
+  );
+
+  // --- Demo Director: scripted scenarios (Option A) -------------------------
+  //
+  // runScenario(key) plays a clean, choreographed sequence for filming. It
+  // pauses the ambient random drivers (uncluttered stage), clears any in-flight
+  // scenario, then schedules steps that drive the SAME controller methods the
+  // live system uses — so what's filmed is the real pipeline, just
+  // deterministically timed. The 'proactive' scenario is the centrepiece: PULSE
+  // predicts and pre-arms the exhaust BEFORE the cooker whistle actually fires
+  // ("anticipates, not responds").
+  const runScenario = useCallback(
+    (key) => {
+      // Stage the scene: stop the random drivers, clear any running scenario.
+      setIsAutoDemo(false);
+      scenarioTimersRef.current.forEach(clearTimeout);
+      scenarioTimersRef.current = [];
+      const at = (ms, fn) => scenarioTimersRef.current.push(setTimeout(fn, ms));
+      const spike = () => {
+        setWaveAmplitude(WAVE_SPIKE);
+        const t = setTimeout(() => setWaveAmplitude(WAVE_BASELINE), WAVE_DECAY_MS);
+        decayTimersRef.current.push(t);
+      };
+      let beatSeq = 0;
+      const beat = (obj) =>
+        setScenarioBeat({ id: `beat-${Date.now()}-${(beatSeq += 1)}`, ...obj });
+
+      if (key === 'cooker') {
+        at(150, () => handleSensoryTrigger('audio', { profile: 'cooker_whistle', score: 95 }));
+        at(240, () =>
+          beat({
+            phase: 'reacting',
+            icon: '⚡',
+            accent: 'cyan',
+            title: 'Detected & Acted',
+            subtitle: 'Pressure cooker whistle → Kitchen Exhaust ON',
+            tag: 'Reactive · Acoustic',
+          })
+        );
+        at(3800, () => setScenarioBeat(null));
+      } else if (key === 'tap') {
+        at(150, () => handleSensoryTrigger('audio', { profile: 'tap_running', score: 92 }));
+        at(240, () =>
+          beat({
+            phase: 'reacting',
+            icon: '⚡',
+            accent: 'cyan',
+            title: 'Detected & Acted',
+            subtitle: 'Running tap → Water Geyser pre-heat',
+            tag: 'Reactive · Acoustic',
+          })
+        );
+        at(3800, () => setScenarioBeat(null));
+      } else if (key === 'balcony') {
+        at(150, () =>
+          handleSensoryTrigger('video', { event: 'motion_balcony', confidence: 94, zone: 'Balcony' })
+        );
+        at(240, () =>
+          beat({
+            phase: 'reacting',
+            icon: '⚡',
+            accent: 'purple',
+            title: 'Detected & Acted',
+            subtitle: 'Balcony motion → Presence lights ON',
+            tag: 'Reactive · Video',
+          })
+        );
+        at(3800, () => setScenarioBeat(null));
+      } else if (key === 'proactive') {
+        // 1) Context forms from the learned household rhythm (no trigger yet).
+        at(150, () => {
+          appendLog(
+            'EnergyAgent',
+            'Context Check: Evening dinner-prep window opening · Lakshmi home · humidity rising'
+          );
+          beat({
+            phase: 'sensing',
+            step: 1,
+            icon: '🧠',
+            accent: 'purple',
+            title: 'Sensing Context',
+            subtitle: 'Dinner-prep window · Lakshmi home · humidity rising',
+            tag: 'Step 1 / 4',
+          });
+        });
+        // 2) PULSE anticipates the event and surfaces a prediction card.
+        at(1600, () => {
+          setAnticipations((prev) => [
+            {
+              id: nextLogId(),
+              predictionText: 'Pressure cooker likely in ~2 min',
+              etaText: 'in 2 min',
+              targetApplianceId: 'exhaust',
+              confidence: 0.92,
+            },
+            ...prev,
+          ]);
+          appendLog('KitchenAgent', 'Anticipation: pressure cooker imminent — staging Kitchen Exhaust');
+          beat({
+            phase: 'anticipating',
+            step: 2,
+            icon: '🔮',
+            accent: 'cyan',
+            title: 'Anticipating',
+            subtitle: 'Pressure cooker likely — staging Kitchen Exhaust',
+            eta: 120,
+            tag: 'Step 2 / 4',
+          });
+        });
+        // 3) PROACTIVE action — pre-arm the exhaust BEFORE the whistle.
+        at(3500, () => {
+          spike();
+          setAppliances((prev) =>
+            prev.map((a) =>
+              a.id === 'exhaust'
+                ? { ...a, active: true, mode: 'ai', state: 'Pre-Armed (Anticipated)' }
+                : a
+            )
+          );
+          appendLog('KitchenAgent', 'Action (proactive): Kitchen Exhaust pre-armed ahead of the event');
+          beat({
+            phase: 'action',
+            step: 3,
+            icon: '⚡',
+            accent: 'amber',
+            title: 'Proactive Action',
+            subtitle: 'Kitchen Exhaust pre-armed — before the event',
+            tag: 'Step 3 / 4',
+          });
+        });
+        // 4) The actual acoustic trigger arrives — prediction confirmed.
+        at(5600, () => handleSensoryTrigger('audio', { profile: 'cooker_whistle', score: 97 }));
+        at(5800, () => {
+          appendLog(
+            'SystemAgent',
+            'Prediction confirmed ✓ Exhaust was already running before the whistle'
+          );
+          beat({
+            phase: 'confirmed',
+            step: 4,
+            icon: '✅',
+            accent: 'green',
+            title: 'Prediction Confirmed',
+            subtitle: 'Exhaust was already running ~2 min before the whistle',
+            tag: 'Step 4 / 4',
+          });
+        });
+        at(9500, () => setScenarioBeat(null));
+      }
+    },
+    [handleSensoryTrigger, appendLog]
+  );
+
+  // Clear any pending scenario timers on unmount.
+  useEffect(
+    () => () => {
+      scenarioTimersRef.current.forEach(clearTimeout);
+      scenarioTimersRef.current = [];
+    },
+    []
+  );
+
+  // --- Kitchen Cam scenario cues (video-synced, Option C) -------------------
+  //
+  // The KitchenCamPane plays the recorded kitchen clip and calls kitchenCue(key)
+  // at each timestamp (keyed to the VIDEO clock, so overlays stay in lockstep
+  // with the footage). Each cue drives the SAME shared state the live system
+  // uses: it flips devices on/off, streams agent-attributed reasoning, spikes
+  // the sphere, and sets the center-stage Anticipation Theater beat. This is the
+  // grounded "real home" demo: sense → fuse context → reason (with latency) →
+  // anticipate → act → keep safe.
+  const kitchenCue = useCallback(
+    (key) => {
+      const beat = (obj) =>
+        setScenarioBeat({ id: `kc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ...obj });
+      const setDev = (id, patch) =>
+        setAppliances((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+      const spike = () => {
+        setWaveAmplitude(WAVE_SPIKE);
+        const t = setTimeout(() => setWaveAmplitude(WAVE_BASELINE), WAVE_DECAY_MS);
+        decayTimersRef.current.push(t);
+      };
+
+      switch (key) {
+        case 'reset':
+          // Everything off / idle for a clean cold-start before the clip plays.
+          setAppliances((prev) =>
+            prev.map((a) =>
+              a.id === 'exhaust' || a.id === 'kitchenlights'
+                ? { ...a, active: false, mode: 'ai', state: 'Managed by AI' }
+                : a
+            )
+          );
+          // Drop any previously-learned routine so a replay re-learns it fresh.
+          setTimelineEvents((prev) => prev.filter((e) => !e.learned));
+          setScenarioBeat(null);
+          break;
+        case 'baseline':
+          appendLog('SystemAgent', 'Kitchen camera online — baseline: daylight, cooktop idle, chimney healthy ✓, room empty');
+          beat({ phase: 'sensing', icon: '🛰', accent: 'cyan', title: 'Scene Online', subtitle: 'Daylight · cooktop idle · chimney online ✓ · kitchen unoccupied', tag: 'Kitchen Cam · Baseline' });
+          break;
+        case 'approach':
+          appendLog('SecurityAgent', 'Motion at entry — a person is approaching the kitchen');
+          beat({ phase: 'sensing', step: 1, icon: '👣', accent: 'purple', title: 'Motion at Entry', subtitle: 'Someone approaching the kitchen', tag: 'Signal · Presence' });
+          break;
+        case 'enter':
+          setDev('kitchenlights', { active: true, mode: 'ai', state: 'ON — Presence' });
+          appendLog('ComfortAgent', 'Person identified (Shubham) · Kitchen Lights ON — presence-based');
+          beat({ phase: 'action', step: 2, accent: 'amber', title: 'Lights On', subtitle: 'Shubham entered · presence-based lighting', tag: 'Action · Comfort' });
+          break;
+        case 'utensil':
+          appendLog('KitchenAgent', 'Cookware detected in hand — meal preparation likely · matches learned lunch routine');
+          beat({ phase: 'sensing', icon: '🍲', accent: 'cyan', title: 'Cookware Detected', subtitle: 'Utensil in hand — meal prep likely (lunch window)', tag: 'Signal · Vision' });
+          break;
+        case 'place':
+          appendLog('KitchenAgent', 'Cookware placed on burner — cooking imminent');
+          beat({ phase: 'sensing', icon: '🍳', accent: 'cyan', title: 'Cookware on Burner', subtitle: 'Pan placed on the stove', tag: 'Signal · Vision' });
+          break;
+        case 'ignite':
+          spike();
+          appendLog('KitchenAgent', 'Flame ignited — burner ON');
+          appendLog('SystemAgent', 'Context fused: ACTIVE COOKING (93%) — time + presence + cookware + flame + lunch routine');
+          beat({ phase: 'anticipating', step: 3, accent: 'amber', title: 'Flame Ignited', subtitle: 'Burner ON — fusing multiple signals into context…', tag: 'Context · Active Cooking 93%' });
+          break;
+        case 'reasoning':
+          appendLog('AirQualityAgent', 'Inference: smoke & steam imminent (~30s) — air quality will drop');
+          beat({ phase: 'anticipating', accent: 'purple', title: 'PULSE Reasoning…', subtitle: 'KitchenAgent · AirQualityAgent · SafetyAgent conferring', tag: 'Agentic · Amazon Bedrock' });
+          break;
+        case 'exhaust':
+          spike();
+          setDev('exhaust', { active: true, mode: 'ai', state: 'Auto ON — Pre-empting smoke' });
+          appendLog('KitchenAgent', 'Action (proactive): Kitchen Exhaust ON — ahead of smoke, not after it');
+          beat({ phase: 'action', step: 4, accent: 'green', title: 'Proactive Action', subtitle: 'Chimney / Exhaust ON — before any smoke appears', tag: 'Anticipated · Acted Early' });
+          break;
+        case 'exit':
+          appendLog('SecurityAgent', 'Person left the kitchen — burner still active');
+          beat({ phase: 'sensing', accent: 'cyan', title: 'Cook Stepped Away', subtitle: 'Person leaving — burner still ON', tag: 'Signal · Presence' });
+          break;
+        case 'safety':
+          appendLog('SafetyAgent', 'Unattended flame — alert sent to Shubham · exhaust maintained · gas auto-cut armed (3 min)');
+          beat({ phase: 'confirmed', accent: 'amber', title: 'Safety Watch', subtitle: 'Unattended burner — exhaust kept on · alert sent · gas auto-cut armed', tag: 'Safety · Proactive' });
+          break;
+        case 'lightsoff':
+          setDev('kitchenlights', { active: false, mode: 'ai', state: 'Off — Room empty' });
+          appendLog('EnergyAgent', 'Room empty — Kitchen Lights OFF · energy saved');
+          beat({ phase: 'action', accent: 'cyan', title: 'Energy Saved', subtitle: 'Room empty — Kitchen Lights OFF', tag: 'Action · Energy' });
+          break;
+        case 'learning':
+          // PULSE observes the recurring cooking pattern and updates the learned
+          // household routine — a new node animates into the Rhythm Timeline.
+          setTimelineEvents((prev) =>
+            prev.some((e) => e.id === 'lunchprep')
+              ? prev
+              : [
+                  ...prev,
+                  {
+                    id: 'lunchprep',
+                    time: '13:15',
+                    label: 'Afternoon Cooking Prep',
+                    color: 'orange',
+                    enabled: true,
+                    learned: true,
+                    confidence: 0.86,
+                  },
+                ]
+          );
+          appendLog('LearningAgent', 'Pattern observed: cooking around 1:15 PM — 3rd weekday this week');
+          appendLog('RoutineAgent', 'Routine model updated: "Afternoon Cooking Prep" added to household rhythm (confidence 86%)');
+          beat({ phase: 'sensing', accent: 'purple', title: 'Learning New Routine', subtitle: 'Afternoon cooking pattern recognized — added to your household rhythm', tag: 'Learning · Routine Updated' });
+          break;
+        case 'end':
+          beat({ phase: 'confirmed', tick: true, accent: 'green', title: 'Acted Before the Problem', subtitle: 'Sensed → understood context → anticipated → acted early → learned a new routine', tag: 'PULSE · Summary' });
+          break;
+        case 'clear':
+          setScenarioBeat(null);
+          break;
+        default:
+          break;
+      }
+    },
+    [appendLog]
+  );
+
   useEffect(() => {
+    if (!isAutoDemo) return undefined;
     let tick = 0;
     const interval = setInterval(() => {
       const profile = DEMO_PROFILES[tick % DEMO_PROFILES.length];
@@ -767,7 +1212,7 @@ export default function usePulseController() {
       decayTimers.forEach(clearTimeout);
       decayTimers.length = 0;
     };
-  }, [handleAcousticTrigger]);
+  }, [handleAcousticTrigger, isAutoDemo]);
 
   // --- Video sensory demo driver (Task 22) ----------------------------------
   //
@@ -776,6 +1221,7 @@ export default function usePulseController() {
   // fusion feels live. Offset cadence from the audio driver keeps the terminal
   // varied. Interval is cleared on cleanup.
   useEffect(() => {
+    if (!isAutoDemo) return undefined;
     let vtick = 0;
     const videoInterval = setInterval(() => {
       const sample = VIDEO_DEMO_EVENTS[vtick % VIDEO_DEMO_EVENTS.length];
@@ -793,7 +1239,7 @@ export default function usePulseController() {
     //   return () => pc.close();
 
     return () => clearInterval(videoInterval);
-  }, [handleSensoryTrigger]);
+  }, [handleSensoryTrigger, isAutoDemo]);
 
   // Convenience: the full member record for the signed-in id (null when out).
   const currentMember = members.find((m) => m.id === currentMemberId) || null;
@@ -809,6 +1255,8 @@ export default function usePulseController() {
     signOut,
     timelineEvents,
     toggleRoutine,
+    addRoutine,
+    removeRoutine,
     appliances,
     reasoningLog,
     waveAmplitude,
@@ -828,11 +1276,21 @@ export default function usePulseController() {
     energy,
     handleSensoryTrigger,
     handleAcousticTrigger,
+    triggerPujaAudio,
+    prepareAudioMode,
     approveAnticipation,
     snoozeAnticipation,
     askPulse,
     toggleAppliancePower,
     setApplianceControl,
     returnApplianceToAI,
+    // Demo Director (Option A)
+    isAutoDemo,
+    toggleAutoDemo,
+    setAutoDemo: setIsAutoDemo,
+    runScenario,
+    scenarioBeat,
+    // Kitchen Cam scenario (Option C)
+    kitchenCue,
   };
 }

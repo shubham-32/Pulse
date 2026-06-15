@@ -130,7 +130,7 @@ function usePrefersReducedMotion() {
  *  - Right spectrum bars: CSS scaleY/opacity jitter, staggered per bar.
  *  - Platform rings: staggered opacity/scale pulse (Framer; reduced-motion off).
  */
-export default function AcousticPulse({ waveAmplitude }) {
+export default function AcousticPulse({ waveAmplitude, compact = false }) {
   const osReduceMotion = usePrefersReducedMotion();
   // The user's explicit Settings toggle is authoritative; fall back to the OS
   // setting when the preference is unset/false so JS-driven Framer loops (sphere
@@ -138,22 +138,28 @@ export default function AcousticPulse({ waveAmplitude }) {
   const { reducedMotion: prefReduceMotion } = usePulse();
   const reduceMotion = prefReduceMotion || osReduceMotion;
 
+  // Compact mode shrinks the sphere + rings so the whole pane fits inside a
+  // 16:9 frame the same size as the camera feed (used by the "Live Audio Feed"
+  // selector on the dashboard).
+  const sphereSize = compact ? 'min(56%, 188px)' : 'min(78%, 420px)';
+  const ringsHeight = compact ? '36px' : '72px';
+
   return (
     <div className="relative flex-1 flex flex-col items-center justify-center">
       {/* Section subtitle (keeps the centerpiece visually labeled). */}
       <div className="pointer-events-none text-center">
         <p className="font-sans text-[10px] font-medium uppercase tracking-[0.4em] text-accent-cyan/70">
-          Real-Time Acoustic Sense
+          Real-Time Sense
         </p>
-        <p className="mt-1 font-sans text-base font-semibold tracking-wide text-white/90">
+        <p className={'mt-1 font-sans font-semibold tracking-wide text-white/90 ' + (compact ? 'text-sm' : 'text-base')}>
           The Acoustic Pulse
         </p>
       </div>
 
       {/* Sphere stack — bloom + glass sphere + waveform. */}
       <div
-        className="relative mt-6 flex items-center justify-center"
-        style={{ width: 'min(78%, 420px)', aspectRatio: '1 / 1' }}
+        className={'relative flex items-center justify-center ' + (compact ? 'mt-3' : 'mt-6')}
+        style={{ width: sphereSize, aspectRatio: '1 / 1' }}
       >
         {/* Soft outer bloom (separate layer so it can pulse independently).
             Pre-blurred; we animate opacity/scale only (never the blur radius). */}
@@ -302,8 +308,8 @@ export default function AcousticPulse({ waveAmplitude }) {
 
       {/* Glowing concentric platform rings — the floor the sphere rests on. */}
       <div
-        className="relative mt-2 flex items-center justify-center"
-        style={{ width: 'min(78%, 420px)', height: '72px' }}
+        className={'relative flex items-center justify-center ' + (compact ? 'mt-1' : 'mt-2')}
+        style={{ width: sphereSize, height: ringsHeight }}
       >
         {PLATFORM_RINGS.map((r) => (
           <motion.div

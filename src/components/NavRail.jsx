@@ -9,6 +9,7 @@
 //   - has an accent-cyan glow indicator when active, plus hover/focus-visible
 //     states for keyboard users.
 
+import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { usePulse } from '../hooks/PulseProvider.jsx';
 import Avatar from './Avatar.jsx';
@@ -71,15 +72,6 @@ function InsightsIcon() {
   );
 }
 
-function AutomationsIcon() {
-  // Lightning bolt — routines.
-  return (
-    <svg {...iconProps}>
-      <path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z" />
-    </svg>
-  );
-}
-
 function SettingsIcon() {
   // Gear (simplified).
   return (
@@ -108,18 +100,31 @@ const NAV_ITEMS = [
   { to: '/rooms', label: 'Rooms', Icon: RoomsIcon },
   { to: '/family', label: 'Family', Icon: FamilyIcon },
   { to: '/insights', label: 'Insights', Icon: InsightsIcon },
-  { to: '/automations', label: 'Automations', Icon: AutomationsIcon },
   { to: '/settings', label: 'Settings', Icon: SettingsIcon },
 ];
 
 export default function NavRail() {
   const { currentMember, signOut } = usePulse();
   const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleSignOut = () => {
+    setDropdownOpen(false);
     signOut();
     navigate('/login', { replace: true });
   };
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
 
   return (
     <nav
@@ -192,27 +197,44 @@ export default function NavRail() {
         ))}
       </ul>
 
-      {/* Current member + sign out (Task 17) */}
+      {/* Current member avatar with sign-out dropdown */}
       {currentMember && (
-        <div className="mt-auto flex w-full flex-col items-center gap-2 px-2">
+        <div className="mt-auto flex w-full flex-col items-center gap-2 px-2" ref={dropdownRef}>
           <div className="my-1 h-px w-8 bg-white/10" />
-          <span title={`${currentMember.name} · ${currentMember.relationship}`}>
-            <Avatar member={currentMember} size={36} />
-          </span>
-          <span className="hidden md:block max-w-full truncate text-[10px] font-medium text-white/60">
-            {currentMember.name.split(' ')[0]}
-          </span>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            aria-label={`Sign out ${currentMember.name}`}
-            title="Sign out"
-            className="group flex h-9 w-9 items-center justify-center rounded-xl text-white/55
-                       transition-colors duration-200 hover:bg-white/5 hover:text-accent-orange
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan/70"
-          >
-            <SignOutIcon />
-          </button>
+          <div className="relative flex flex-col items-center w-full">
+            <button
+              type="button"
+              onClick={() => setDropdownOpen((o) => !o)}
+              aria-label={`${currentMember.name} — account menu`}
+              title={`${currentMember.name} · ${currentMember.relationship}`}
+              className="flex flex-col items-center gap-1 rounded-xl p-1 transition-colors duration-200
+                         hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan/70"
+            >
+              <Avatar member={currentMember} size={36} />
+              <span className="hidden md:block max-w-full truncate text-[10px] font-medium text-white/60">
+                {currentMember.name.split(' ')[0]}
+              </span>
+            </button>
+
+            {dropdownOpen && (
+              <div
+                className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2
+                           min-w-[130px] rounded-xl border border-white/10
+                           bg-[#0f1117]/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]
+                           overflow-hidden z-50"
+              >
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-white/75
+                             hover:bg-white/5 hover:text-accent-orange transition-colors duration-150"
+                >
+                  <SignOutIcon />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </nav>

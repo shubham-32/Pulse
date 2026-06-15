@@ -22,7 +22,6 @@ import DashboardPage from './pages/DashboardPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
 import FamilyPage from './pages/FamilyPage.jsx';
 import InsightsPage from './pages/InsightsPage.jsx';
-import AutomationsPage from './pages/AutomationsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 
 /**
@@ -61,7 +60,6 @@ export default function App() {
             <Route path="rooms" element={<RoomsPage />} />
             <Route path="family" element={<FamilyPage />} />
             <Route path="insights" element={<InsightsPage />} />
-            <Route path="automations" element={<AutomationsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             {/* Unknown paths fall back to the dashboard. */}
             <Route path="*" element={<Navigate to="/" replace />} />

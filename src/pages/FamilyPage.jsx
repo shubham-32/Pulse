@@ -12,6 +12,7 @@ import { usePulse } from '../hooks/PulseProvider.jsx';
 import { PanelHeading } from '../components/GlassPanel.jsx';
 import MemberCard from '../components/MemberCard.jsx';
 import AnnouncementsPanel from '../components/AnnouncementsPanel.jsx';
+import RoutinesPanel from '../components/RoutinesPanel.jsx';
 
 export default function FamilyPage() {
   const {
@@ -22,6 +23,10 @@ export default function FamilyPage() {
     currentMember,
     announcements,
     sendAnnouncement,
+    timelineEvents,
+    addRoutine,
+    toggleRoutine,
+    removeRoutine,
   } = usePulse();
 
   const homeCount = members.filter((m) => m.presence === 'home').length;
@@ -74,6 +79,17 @@ export default function FamilyPage() {
             />
           ))}
         </motion.div>
+
+        {/* Household routine management — learned + member-added routines that
+            drive the dashboard Home Rhythm (fully synced). */}
+        <RoutinesPanel
+          routines={timelineEvents}
+          members={members}
+          currentMember={currentMember}
+          onAdd={addRoutine}
+          onToggle={toggleRoutine}
+          onRemove={removeRoutine}
+        />
 
         {/* Task 19 — Household Announcements / Intercom: any member broadcasts
             to all; feed + spoken-by-PULSE relay stub. */}

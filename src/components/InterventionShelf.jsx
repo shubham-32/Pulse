@@ -4,6 +4,7 @@
 // previously inlined in PulseDashboard; it is extracted here unchanged (same
 // markup/classes) in the Task 9 refactor.
 
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PanelHeading } from './GlassPanel.jsx';
 
@@ -210,6 +211,8 @@ export function ApplianceCard({ appliance }) {
 
   return (
     <motion.div
+      layout
+      style={{ zIndex: active ? 5 : 1 }}
       className="relative overflow-hidden rounded-2xl border backdrop-blur-xl bg-white/5 p-4 flex flex-col gap-2 min-h-[112px]"
       initial={false}
       animate={{
@@ -218,7 +221,7 @@ export function ApplianceCard({ appliance }) {
           ? `0 0 22px ${ACTIVE_GLOW}44, inset 0 0 18px ${ACTIVE_GLOW}22, 0 8px 40px rgba(0,0,0,0.45)`
           : '0 8px 40px rgba(0,0,0,0.45)',
       }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+      transition={{ duration: 0.5, ease: 'easeOut', layout: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } }}
     >
       {/* Brief scale "pop" highlight on each active transition. Re-mounting on
           the active key restarts the keyframe so every activation flashes. */}
@@ -293,7 +296,7 @@ export default function ApplianceShelf({ appliances }) {
           {appliances.length} devices · AI-managed
         </span>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
         {appliances.map((appliance) => (
           <ApplianceCard key={appliance.id} appliance={appliance} />
         ))}
