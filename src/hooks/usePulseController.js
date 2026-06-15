@@ -640,6 +640,54 @@ export default function usePulseController() {
     });
   }, []);
 
+  // --- Social chatter audio trigger (Audio 2 — Chatter.m4a) -----------------
+  //
+  // Three callbacks wired to the ChatterAudioTrack component:
+  //   triggerChatterStart    — fires immediately on play (chatter detected)
+  //   triggerChatterPassedBy — fires on pause when play time < 10 s
+  //   triggerChatterRelaxing — fires at the 10 s mark (sustained occupancy →
+  //                            Living Room Fan + Smart AC turned ON)
+
+  const triggerChatterStart = useCallback(() => {
+    setReasoningLog((prev) => {
+      const entries = [
+        { id: nextLogId(), timestamp: '18:47:00', agent: 'OccupancyAgent', text: 'Acoustic Pattern: Social chatter detected in Living Room (91% Match)' },
+        { id: nextLogId(), timestamp: '18:47:01', agent: 'OccupancyAgent', text: 'Context Check: Multiple vocal signatures — 2+ occupants identified' },
+      ];
+      const merged = [...prev, ...entries];
+      return merged.length > LOG_CAP ? merged.slice(merged.length - LOG_CAP) : merged;
+    });
+  }, []);
+
+  const triggerChatterPassedBy = useCallback(() => {
+    setReasoningLog((prev) => {
+      const entry = {
+        id: nextLogId(), timestamp: '18:47:08', agent: 'OccupancyAgent',
+        text: 'Inference: Short vocal burst — transient activity, occupants passed by the room',
+      };
+      const merged = [...prev, entry];
+      return merged.length > LOG_CAP ? merged.slice(merged.length - LOG_CAP) : merged;
+    });
+  }, []);
+
+  const triggerChatterRelaxing = useCallback(() => {
+    setReasoningLog((prev) => {
+      const entries = [
+        { id: nextLogId(), timestamp: '18:47:10', agent: 'OccupancyAgent', text: 'Inference: Sustained conversation (>10 s) — occupants settling in the Living Room' },
+        { id: nextLogId(), timestamp: '18:47:11', agent: 'ComfortAgent',   text: 'Action Triggered: Living Room Fan ON + Smart AC ON — comfort for extended occupancy' },
+      ];
+      const merged = [...prev, ...entries];
+      return merged.length > LOG_CAP ? merged.slice(merged.length - LOG_CAP) : merged;
+    });
+    setAppliances((prev) =>
+      prev.map((a) => {
+        if (a.id === 'fan') return { ...a, active: true, mode: 'ai', state: 'ON — Occupancy Comfort' };
+        if (a.id === 'ac')  return { ...a, active: true, mode: 'ai', state: 'ON — Occupancy Comfort' };
+        return a;
+      })
+    );
+  }, []);
+
   // --- Puja Ghanti audio trigger (Audio 1 playback) -------------------------
   //
   // All timestamps are fixed to the 18:45 evening window so the demo reads as
@@ -734,8 +782,19 @@ export default function usePulseController() {
     decayTimersRef.current.push(t4);
   }, []);
 
-  // Prepares the UI for audio mode: resets puja-scene devices to off and
-  // replaces the reasoning log with "waiting for audio" standby entries.
+  // Prepares the UI for camera mode: all appliances off, reasoning log shows
+  // a single standby entry so the right panel is clean before the clip plays.
+  const prepareCameraMode = useCallback(() => {
+    setAppliances((prev) =>
+      prev.map((a) => ({ ...a, active: false, mode: 'ai', state: 'Managed by AI' }))
+    );
+    setReasoningLog([
+      { id: nextLogId(), timestamp: formatTimestamp(), agent: 'SystemAgent', text: 'Vision sensor online — monitoring live camera feed' },
+    ]);
+  }, []);
+
+  // Prepares the UI for audio mode: resets all devices to off and replaces
+  // the reasoning log with a single "waiting" standby entry.
   // Fixed 18:4x timestamps keep the demo session coherent.
   const prepareAudioMode = useCallback(() => {
     setAppliances((prev) =>
@@ -1158,8 +1217,8 @@ export default function usePulseController() {
                   ...prev,
                   {
                     id: 'lunchprep',
-                    time: '13:15',
-                    label: 'Afternoon Cooking Prep',
+                    time: '18:15',
+                    label: 'Evening Snack Prep',
                     color: 'orange',
                     enabled: true,
                     learned: true,
@@ -1167,8 +1226,8 @@ export default function usePulseController() {
                   },
                 ]
           );
-          appendLog('LearningAgent', 'Pattern observed: cooking around 1:15 PM — 3rd weekday this week');
-          appendLog('RoutineAgent', 'Routine model updated: "Afternoon Cooking Prep" added to household rhythm (confidence 86%)');
+          appendLog('LearningAgent', 'Pattern observed: snack prep around 6:15 PM — 3rd weekday this week');
+          appendLog('RoutineAgent', 'Routine model updated: "Evening Snack Prep" added to household rhythm (confidence 86%)');
           beat({ phase: 'sensing', accent: 'purple', title: 'Learning New Routine', subtitle: 'Afternoon cooking pattern recognized — added to your household rhythm', tag: 'Learning · Routine Updated' });
           break;
         case 'end':
@@ -1277,7 +1336,11 @@ export default function usePulseController() {
     handleSensoryTrigger,
     handleAcousticTrigger,
     triggerPujaAudio,
+    prepareCameraMode,
     prepareAudioMode,
+    triggerChatterStart,
+    triggerChatterPassedBy,
+    triggerChatterRelaxing,
     approveAnticipation,
     snoozeAnticipation,
     askPulse,

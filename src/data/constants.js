@@ -116,6 +116,7 @@ export const AGENTS = {
   RoutineAgent:    { label: 'Routine',  hex: '#eab308' },
   IntercomAgent:   { label: 'Intercom', hex: '#38bdf8' },
   PujaAgent:       { label: 'Puja',     hex: '#ec4899' },
+  OccupancyAgent:  { label: 'Occupancy', hex: '#34d399' },
 };
 
 /** Accent hex for an agent name (falls back to a neutral grey). */
@@ -132,6 +133,7 @@ export const AGENT_LEGEND = [
   'AirQualityAgent',
   'LearningAgent',
   'PujaAgent',
+  'OccupancyAgent',
 ];
 
 /**

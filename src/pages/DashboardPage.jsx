@@ -34,13 +34,6 @@ const WAVEFORM_BARS = Array.from({ length: 36 }, (_, i) => ({
   h: 22 + (Math.sin(i * 1.45) * 0.5 + 0.5) * 68,
 }));
 
-// Audio 1 carries the real puja ghanti recording; 2 & 3 are placeholders.
-// src and onPlay are optional — absent means a silent placeholder track.
-const AUDIO_TRACK_DEFS = [
-  { name: 'Audio 1' },
-  { name: 'Audio 2' },
-  { name: 'Audio 3' },
-];
 
 function AudioPlayIcon() {
   return (
@@ -59,18 +52,18 @@ function AudioPauseIcon() {
   );
 }
 
-function AudioTrack({ name, playing, onToggle, audioSrc, onPlay }) {
+function AudioTrack({ name, room, playing, onToggle, audioSrc, onPlay }) {
   const audioRef = useRef(null);
-  // Keep onPlay stable across renders inside the effect.
   const onPlayRef = useRef(onPlay);
+  const [progress, setProgress] = useState(0);
   useEffect(() => { onPlayRef.current = onPlay; }, [onPlay]);
 
-  // Drive the actual <audio> element in sync with the `playing` flag.
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
     if (playing) {
       el.currentTime = 0;
+      setProgress(0);
       el.play().catch(() => {});
       onPlayRef.current?.();
     } else {
@@ -80,9 +73,16 @@ function AudioTrack({ name, playing, onToggle, audioSrc, onPlay }) {
 
   return (
     <div className="flex items-center gap-2.5 rounded-lg bg-white/5 hover:bg-white/[0.08] px-2.5 py-2 transition-colors">
-      {/* Hidden audio element — only mounted for tracks that have a real source. */}
       {audioSrc && (
-        <audio ref={audioRef} src={audioSrc} onEnded={onToggle} />
+        <audio
+          ref={audioRef}
+          src={audioSrc}
+          onEnded={onToggle}
+          onTimeUpdate={() => {
+            const el = audioRef.current;
+            if (el && el.duration) setProgress(el.currentTime / el.duration);
+          }}
+        />
       )}
       <button
         type="button"
@@ -94,7 +94,10 @@ function AudioTrack({ name, playing, onToggle, audioSrc, onPlay }) {
       >
         {playing ? <AudioPauseIcon /> : <AudioPlayIcon />}
       </button>
-      <span className="text-[11px] font-medium text-white/70 w-12 shrink-0">{name}</span>
+      <span className="flex flex-col leading-tight w-16 shrink-0">
+        <span className="text-[11px] font-medium text-white/70">{name}</span>
+        {room && <span className="text-[9px] text-white/40">(in {room})</span>}
+      </span>
       {/* Waveform bars + sweeping playhead */}
       <div className="relative flex-1 h-6 overflow-hidden rounded-sm">
         <div className="absolute inset-0 flex items-end gap-px px-0.5">
@@ -114,8 +117,138 @@ function AudioTrack({ name, playing, onToggle, audioSrc, onPlay }) {
         {playing && (
           <div
             aria-hidden="true"
-            className="audio-playhead absolute top-0 bottom-0 w-[2px] rounded-full
-                       bg-accent-cyan shadow-[0_0_8px_rgba(34,211,238,0.85)]"
+            className="absolute top-0 bottom-0 w-[2px] rounded-full bg-accent-cyan shadow-[0_0_8px_rgba(34,211,238,0.85)]"
+            style={{ left: `calc(${progress * 100}% - 1px)` }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ChatterAudioTrack — uses Web Audio API for a perfectly seamless (gapless)
+// loop. Three behavioral callbacks let the parent react to play duration:
+//   onStart      — fires immediately when play begins
+//   onShortPause — fires when the user pauses before 10 s have elapsed
+//   onLongPlay   — fires at exactly the 10-second mark while still playing
+function ChatterAudioTrack({ name, room, playing, onToggle, onStart, onShortPause, onLongPlay }) {
+  const ctxRef             = useRef(null);
+  const sourceRef          = useRef(null);
+  const bufferRef          = useRef(null);
+  const startMsRef         = useRef(null);
+  const longTimerRef       = useRef(null);
+  const longFiredRef       = useRef(false);
+  const progressIntervalRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+
+  // Keep callbacks stable inside effects without adding them as deps.
+  const onStartRef      = useRef(onStart);
+  const onShortPauseRef = useRef(onShortPause);
+  const onLongPlayRef   = useRef(onLongPlay);
+  useEffect(() => { onStartRef.current      = onStart;      }, [onStart]);
+  useEffect(() => { onShortPauseRef.current = onShortPause; }, [onShortPause]);
+  useEffect(() => { onLongPlayRef.current   = onLongPlay;   }, [onLongPlay]);
+
+  // Decode the M4A once on mount; keep the buffer for instantaneous playback.
+  useEffect(() => {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    ctxRef.current = ctx;
+    fetch('/audios/Chatter.m4a')
+      .then((r) => r.arrayBuffer())
+      .then((ab) => ctx.decodeAudioData(ab))
+      .then((buf) => { bufferRef.current = buf; })
+      .catch(() => {});
+    return () => { ctx.close(); };
+  }, []);
+
+  // Start / stop the looping source node in sync with the `playing` flag.
+  useEffect(() => {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+
+    if (playing) {
+      ctx.resume().catch(() => {});
+      if (bufferRef.current) {
+        const src = ctx.createBufferSource();
+        src.buffer = bufferRef.current;
+        src.loop = true; // Web Audio seamless loop — zero gap guaranteed
+        src.connect(ctx.destination);
+        src.start(0);
+        sourceRef.current = src;
+      }
+      startMsRef.current   = Date.now();
+      longFiredRef.current = false;
+      onStartRef.current?.();
+
+      progressIntervalRef.current = setInterval(() => {
+        const buf = bufferRef.current;
+        const t0  = startMsRef.current;
+        if (!buf || !t0) return;
+        const elapsed = (Date.now() - t0) / 1000;
+        setProgress((elapsed % buf.duration) / buf.duration);
+      }, 50);
+
+      longTimerRef.current = setTimeout(() => {
+        longFiredRef.current = true;
+        onLongPlayRef.current?.();
+      }, 10000);
+    } else {
+      clearInterval(progressIntervalRef.current);
+      setProgress(0);
+      clearTimeout(longTimerRef.current);
+      if (sourceRef.current) {
+        try { sourceRef.current.stop(); } catch { /* already stopped */ }
+        sourceRef.current.disconnect();
+        sourceRef.current = null;
+      }
+      const elapsed = startMsRef.current ? Date.now() - startMsRef.current : 0;
+      if (elapsed > 500 && !longFiredRef.current) {
+        onShortPauseRef.current?.();
+      }
+      startMsRef.current   = null;
+      longFiredRef.current = false;
+    }
+
+    return () => { clearTimeout(longTimerRef.current); clearInterval(progressIntervalRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing]);
+
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg bg-white/5 hover:bg-white/[0.08] px-2.5 py-2 transition-colors">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={playing ? `Pause ${name}` : `Play ${name}`}
+        className="shrink-0 flex h-6 w-6 items-center justify-center rounded-full
+                   bg-accent-cyan/20 text-accent-cyan hover:bg-accent-cyan/35
+                   transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan/60"
+      >
+        {playing ? <AudioPauseIcon /> : <AudioPlayIcon />}
+      </button>
+      <span className="flex flex-col leading-tight w-16 shrink-0">
+        <span className="text-[11px] font-medium text-white/70">{name}</span>
+        {room && <span className="text-[9px] text-white/40">(in {room})</span>}
+      </span>
+      <div className="relative flex-1 h-6 overflow-hidden rounded-sm">
+        <div className="absolute inset-0 flex items-end gap-px px-0.5">
+          {WAVEFORM_BARS.map((bar, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-sm transition-colors duration-300"
+              style={{
+                height: `${bar.h}%`,
+                background: playing ? 'rgba(52,211,153,0.42)' : 'rgba(255,255,255,0.16)',
+              }}
+            />
+          ))}
+        </div>
+        {playing && (
+          <div
+            aria-hidden="true"
+            className="absolute top-0 bottom-0 w-[2px] rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]"
+            style={{ left: `calc(${progress * 100}% - 1px)` }}
           />
         )}
       </div>
@@ -137,7 +270,11 @@ export default function DashboardPage() {
     askPulse,
     setAutoDemo,
     triggerPujaAudio,
+    prepareCameraMode,
     prepareAudioMode,
+    triggerChatterStart,
+    triggerChatterPassedBy,
+    triggerChatterRelaxing,
   } = usePulse();
 
   const [feed, setFeed] = useState('camera');
@@ -148,15 +285,17 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    // Both feeds start with all appliances off and a single standby log.
+    // The auto-demo driver is always paused so only real interactions
+    // (video cues or audio playback) update state.
+    setAutoDemo(false);
     if (feed === 'audio') {
-      setAutoDemo(false);
       setPlayingTrack(null);
-      // Reset devices + swap reasoning log to "waiting" standby entries.
       prepareAudioMode();
     } else {
-      setAutoDemo(true);
+      prepareCameraMode();
     }
-  }, [feed, setAutoDemo, prepareAudioMode]);
+  }, [feed, setAutoDemo, prepareCameraMode, prepareAudioMode]);
 
   return (
     <div className="relative min-h-full w-full flex flex-col gap-4 p-1 md:p-2 lg:p-3">
@@ -224,16 +363,25 @@ export default function DashboardPage() {
                       Audio Logs
                     </p>
                     <div className="flex-1 overflow-y-auto pulse-scroll flex flex-col gap-1.5 -mr-1 pr-1 min-h-0">
-                      {AUDIO_TRACK_DEFS.map(({ name }, idx) => (
-                        <AudioTrack
-                          key={name}
-                          name={name}
-                          playing={playingTrack === name}
-                          onToggle={() => toggleTrack(name)}
-                          audioSrc={idx === 0 ? '/audios/videoplayback.weba' : undefined}
-                          onPlay={idx === 0 ? triggerPujaAudio : undefined}
-                        />
-                      ))}
+                      {/* Audio 1 — Puja Ghanti (real recording, weba) */}
+                      <AudioTrack
+                        name="Puja Bell"
+                        room="Puja Ghar"
+                        playing={playingTrack === 'Audio 1'}
+                        onToggle={() => toggleTrack('Audio 1')}
+                        audioSrc="/audios/videoplayback.weba"
+                        onPlay={triggerPujaAudio}
+                      />
+                      {/* Audio 2 — Chatter (M4A, Web Audio seamless loop) */}
+                      <ChatterAudioTrack
+                        name="Chatter"
+                        room="Living Room"
+                        playing={playingTrack === 'Audio 2'}
+                        onToggle={() => toggleTrack('Audio 2')}
+                        onStart={triggerChatterStart}
+                        onShortPause={triggerChatterPassedBy}
+                        onLongPlay={triggerChatterRelaxing}
+                      />
                     </div>
                   </div>
                 </div>

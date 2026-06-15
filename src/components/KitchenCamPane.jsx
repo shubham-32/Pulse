@@ -60,6 +60,17 @@ function fmt(t) {
   return `${m}:${s}`;
 }
 
+// Maps video elapsed seconds onto a real-clock timestamp starting at 18:15:00.
+function fmtCamTime(videoSecs) {
+  const BASE = 18 * 3600 + 15 * 60; // 18:15:00 in seconds since midnight
+  const total = BASE + Math.floor(videoSecs);
+  const h = Math.floor(total / 3600) % 24;
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const p = (n) => String(n).padStart(2, '0');
+  return `${p(h)}:${p(m)}:${p(s)}`;
+}
+
 export default function KitchenCamPane({ className = '' }) {
   const { kitchenCue, setAutoDemo, scenarioBeat } = usePulse();
   const videoRef = useRef(null);
@@ -294,11 +305,14 @@ export default function KitchenCamPane({ className = '' }) {
             );
           })}
 
-        {/* Subtle scanline + cam label */}
+        {/* Cam label (bottom-left) + footage timestamp (top-right) */}
         {isLive && (
           <>
             <div className="pointer-events-none absolute left-2 top-2 rounded bg-black/50 px-1.5 py-0.5 font-mono text-[9px] text-white/70">
               CAM-01 · KITCHEN
+            </div>
+            <div className="pointer-events-none absolute left-2 bottom-2 rounded bg-black/50 px-1.5 py-0.5 font-mono text-[9px] text-white/70 tabular-nums">
+              {fmtCamTime(time)}
             </div>
             {/* Presence identification — a fixed chip (not a body-tracking box,
                 so it never mismatches the moving subject). Appears shortly after
